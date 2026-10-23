@@ -22,13 +22,14 @@
 #include <notification/notification_messages.h>
 #include <subghz_scheduler_icons.h>
 
-#define SCHEDULER_APP_NAME                   "Sub-GHz Scheduler"
-#define SCHEDULER_APP_VERSION                "3.1.0"
-#define SCHEDULER_APP_AUTHOR                 "Patrick Edwards"
-#define SCHEDULER_APP_HANDLE                 "@shalebridge"
-#define SCHEDULER_PLAYLIST_MAX_ITEMS         32
+#define SCHEDULER_PLAYLIST_MAX_ITEMS         SCHEDULER_MAX_LINES
 #define SCHEDULER_MANAGED_PLAYLIST_MAX_ITEMS 64
 #define SCHEDULER_PLAYLIST_FOLDER            EXT_PATH("subghz/playlist")
+
+#define SCHEDULER_APP_NAME    "Sub-GHz Scheduler"
+#define SCHEDULER_APP_VERSION "3.4.1"
+#define SCHEDULER_APP_AUTHOR  "Patrick Edwards"
+#define SCHEDULER_APP_HANDLE  "@shalebridge"
 
 #define GUI_DISPLAY_HEIGHT 64
 #define GUI_DISPLAY_WIDTH  128
@@ -67,7 +68,14 @@ struct SchedulerApp {
     char save_name_tmp[SCHEDULER_MAX_LEN_NAME];
     char playlist_name_tmp[SCHEDULER_MAX_LEN_NAME];
     char managed_name_tmp[SCHEDULER_MAX_LEN_NAME];
+    char playlist_wait_tmp[11];
     volatile bool is_transmitting;
+    volatile bool tx_abort;
+    uint32_t last_blink_countdown;
+    int16_t tx_line; // playlist line being sent, -1 for all
+    int16_t edit_line; // playlist line being edited, -1 for the global interval
+    uint8_t start_menu_ids[MenuIndexNum]; // start list position -> MenuIndices
+    uint8_t start_menu_count;
     bool should_reset;
     bool ext_radio_present;
 };

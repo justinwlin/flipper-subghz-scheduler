@@ -1,69 +1,198 @@
-# Sub-GHz Scheduler with on-device playlists
+# SubGHz Scheduler with Timed Playlists
 
-A Flipper Zero app for transmitting saved Sub-GHz signals on a schedule. This derivative of [Sub-GHz Scheduler by Patrick Edwards](https://github.com/shalebridge/flipper-subghz-scheduler), based on [upstream commit `62a526f` (v3.0)](https://github.com/shalebridge/flipper-subghz-scheduler/commit/62a526f52870c9b7e6b6f1fa5878d57711523155), adds an on-device playlist builder and tools to rename or delete saved playlists. It works with the official Flipper firmware; custom firmware is not required.
+This is a public derivative of [Patrick Edwards’s SubGHz Scheduler](https://github.com/shalebridge/flipper-subghz-scheduler). It adds an on-device playlist builder, playlist rename/delete, and portable `time:` waits. The code is MIT licensed.
 
-## What it does
+A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub` or playlist `*.txt` files can be used for transmission, and schedule settings can be saved in a `*.sch` file.
 
-- Build an ordered playlist by choosing saved `.sub` files one at a time, including the same file more than once.
-- Save the playlist as a `.txt` file on the Flipper, then select it automatically for a schedule.
-- Rename or delete saved playlists from the app. Deletion asks for confirmation.
-- Use the original Scheduler features: single-file or playlist transmission, 1 to 6 transmissions per signal, internal or external CC1101 radio, interval and TX delay settings, and saved `.sch` schedules.
+Playlists can also be stepped through one line at a time, with a separate wait or a time of day (HH:MM:SS) per line. See [Playlist Scheduling](#playlist-scheduling).
 
-The playlist builder holds up to 32 signals. It does not edit the contents of a previously saved playlist. To change one, build and save a new list.
+You can build and manage playlists on the Flipper. The builder lets you add each signal in order, insert waits, save the result as a `.txt` playlist, and rename or delete saved playlists. A playlist containing `time:` lines carries its waits with it; selecting that file automatically enables **Step: One** and **Schedule: Per Line**.
+
+| Build a playlist | Add a wait | Saved sequence | Run screen |
+|---|---|---|---|
+| ![Build Playlist menu](screenshots/timed_playlists/build-playlist.png) | ![Wait entry](screenshots/timed_playlists/add-wait.png) | ![Wait and signal in the builder](screenshots/timed_playlists/timed-builder.png) | ![Timed playlist countdown](screenshots/timed_playlists/timed-run.png) |
+
+
+<table style="border:0px">
+  <tr style="border:0px">
+    <td style="border:0px" width="25%" align="left">
+    Schedule intervals in H:M:S format <br>
+    from 00:00:01 to 99:59:59.<br><br>
+    Left/Right select hours, minutes or seconds, Up/Down change the value.
+    OK saves, Back cancels.
+    </td>
+    <td style="border:0px" width="20%"><img src="./screenshots/v3/intervals.png" width="100%"></td>
+  </tr>
+  <tr style="border:0px">
+    <td style="border:0px" width="25%" align="left">
+    Interval timing modes: <br>
+     <ul>
+       <li>Relative: Interval is length of time from `END` of one transmission to `START` of next.</li>
+       <li>Precise: Interval is length of time from `START` of one transmission to `START` of next.</li>
+     </ul>
+     Not used with the <code>Time</code> schedule.
+    </td>
+    <td style="border:0px" width="20%"><img src="./screenshots/v3/timing.png" width="100%"></td>
+  </tr>
+ <tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+    Data Tx Count:<br>
+  <ul>
+  <li>x1, x2, x3, x4, x5, x6</li>
+  </ul>
+  </td>
+  <td style="border:0px" width="20%"><img src="./screenshots/v3/txcount.png" width="100%"></td>
+<tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+    Transmission Modes:<br>
+  <ul>
+  <li>Normal: Transmit after intervals.</li>
+  <li>Immediate: Counts start as interval.</li>
+  <li>One-Shot: Wait interval and transmits once. With a stepped playlist, sends one line (plus any following lines with a zero wait).</li>
+  </ul>
+  </td>
+  <td style="border:0px" width="20%"><img src="./screenshots/v3/txmode.png" width="100%"></td>
+ </tr>
+<tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Inter-transmission delay selectable<br>
+   from 0ms to 1000ms in 50ms increments.
+  </td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v3/txdelay.png" width="100%"></td>
+  </tr>
+  <tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Radio Selection:<br>
+   <ul>
+    <li>Internal</li>
+    <li>External (When Present)</li>
+   </ul>
+  </td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v3/radio.png" width="100%"></td>
+  </tr>
+    <tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Save settings for later use.<br>
+  </td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v3/saveschedule.png" width="100%"></td>
+  </tr>
+  <tr style="border:0px">
+  <td style="border:0px" width="25%" align="left">
+   Run view displays:
+    <ul>
+      <li>TX Mode</li>
+      <li>TX Interval</li>
+      <li>TX Count</li>
+      <li>Radio</li>
+      <li>Selected File</li>
+      <li>TX Interval Countdown (<code>Sending</code> while transmitting)</li>
+      <li>Next playlist line, when stepping</li>
+    </ul>
+  </td>
+   <td style="border:0px" width="20%"><img src="./screenshots/v3/rundisplay.png" width="100%"></td>
+  </tr>
+</table>
+
+## Playlist Scheduling
+
+### Timed playlist text files
+
+Create a playlist through **Build Playlist** or write a `.txt` file directly. Select `Add signal...` for every transmission, including repeats of the same signal. Select `Add wait...` to set the delay in seconds before the next signal. The builder saves these entries under `/ext/subghz/playlist/`.
+
+For example:
+
+```text
+time: 10
+sub: /ext/subghz/speed_up.sub
+sub: /ext/subghz/speed_up.sub
+sub: /ext/subghz/speed_up.sub
+time: 100
+sub: /ext/subghz/slow_down.sub
+sub: /ext/subghz/slow_down.sub
+time: 15
+sub: /ext/subghz/speed_up.sub
+```
+
+Each `time:` applies to the next `sub:` line. Consecutive `sub:` lines without another `time:` are sent back to back, with the configured TX Delay between them. A missing initial `time:` means the first signal starts immediately. After the final line, **Normal** mode repeats from the first line and applies its wait again. **1-Shot** mode runs through all lines once and stops. `time:` must contain a whole number from 0 to 359999 seconds and be followed by a `sub:` line; `.txt` playlists support up to 127 signals. Use paths that exist on your Flipper; the examples above use the stock SD card prefix `/ext`.
+
+To run a hand-written file, choose **New Schedule → Select File**, select the `.txt` file, then **Start**. The app reads waits from the file automatically. Plain `sub:` playlists still use the schedule options below.
+
+Use **Build Playlist → Manage playlists...** to rename or delete `.txt` files saved in `/ext/subghz/playlist/`. Delete asks for confirmation. These actions change the playlist file, not the referenced `.sub` signals.
+
+### Schedule options
+
+When a playlist (`*.txt`) is selected, extra options appear in the schedule menu.
+
+**Step**
+* `All`: every trigger sends the whole playlist (default, same as before).
+* `One`: every trigger sends the next line of the playlist. After the last line it starts over at line 1.
+
+**Schedule** (only with Step `One`)
+* `Uniform`: one interval for every line, set with `Interval`.
+* `Per Line`: every line has its own wait before it is sent. A wait of `00:00:00` sends the line right after the previous one, so lines can be grouped.
+* `Time`: every line is sent at a time of day (`HH:MM:SS`), in playlist order, repeating daily. Lines with the same time are sent one after the other.
+
+**Start** (only with Schedule `Time`)
+* `Line 1`: start with line 1 and wait for its time, even if that is tomorrow (default).
+* `Nearest`: start with the line whose time comes up first, then continue in playlist order. Started at 19:00 in the example below, line 4 is sent at 23:00 and line 1 the next day at 17:30:00.
+
+Set the wait or time of each line under `Edit Lines...`. The same time editor is used: Left/Right select a block, Up/Down change it, OK saves and Back cancels. Settings entered through `Edit Lines...` are stored in the `*.sch` file. Timed playlists built with `Add wait...` store their waits as `time:` lines in the `.txt` file. The stock `SubGHz Playlist` app can still read the `sub:` entries, but it does not apply these waits.
+
+Example: a playlist with 4 lines and Schedule `Time`:
+
+| Line | Time | Sent |
+|---|---|---|
+| 1 | 17:30:00 | 17:30:00 |
+| 2 | 18:00:00 | 18:00:00 |
+| 3 | 18:00:00 | right after line 2 |
+| 4 | 23:00:00 | 23:00:00, then line 1 again the next day at 17:30:00 |
+
+Notes:
+* To send the same signal more than once a day, list its `*.sub` file more than once in the playlist. Every entry is a separate line with its own wait or time.
+* Times use the Flipper clock, so make sure date and time are set correctly.
+* Playlists can have up to 127 lines.
+* The red LED only blinks during the last minute before a send, so long waits stay dark.
+* The app has to stay open on the run screen. Charging is only blocked while transmitting, so the Flipper can stay on USB power for long schedules.
+
 
 ## Install
 
-Download `subghz_scheduler.fap` from the [latest release](https://github.com/justinwlin/flipper-subghz-scheduler/releases/latest) and copy it to `/ext/apps/Sub-GHz/subghz_scheduler.fap` on the Flipper's SD card. You can use qFlipper's file manager or another SD card file manager. Open **Apps → Sub-GHz → Sub-GHz Scheduler**.
+Download `subghz_scheduler.fap` from the [latest release](https://github.com/justinwlin/flipper-subghz-scheduler/releases/latest) and copy it to `/ext/apps/Sub-GHz/subghz_scheduler.fap` on the SD card. Open **Apps → Sub-GHz → Sub-GHz Scheduler**. The published build targets official firmware 1.5.1, API 88.2, target f7. Rebuild with the matching uFBT SDK if your firmware uses another API.
 
-The downloadable build is for **official firmware 1.5.1, API 88.2, target f7**. A `.fap` must match the firmware API on the device. If yours differs, build from source using the matching uFBT SDK. Installing this fork at the path above replaces the catalog version of Scheduler on that SD card; reinstalling the catalog version replaces this fork.
+## Requirements
 
-## Build and transmit a playlist
+This app is tested against the current `dev` and `release` branches of the [OFW](https://github.com/flipperdevices/flipperzero-firmware):
 
-1. Save or capture the signals you want as `.sub` files under `/ext/subghz/`.
-2. Open **Sub-GHz Scheduler → Build Playlist**.
-3. Choose **Add signal...**, select a `.sub` file, and repeat in transmission order. The numbered list shows the order. Use **Remove last** or **Clear list** to correct the draft.
-4. Choose **Save playlist...** and enter a name. The app writes `/ext/subghz/playlist/<name>.txt`, selects it, and opens the schedule settings.
-5. Set **TX Mode**, **Interval**, **TX Count**, and **TX Delay**, then choose **Start**.
+* Current OFW Version: 1.5.1
+<br>[![Compatibility status](https://github.com/justinwlin/flipper-subghz-scheduler/actions/workflows/build.yml/badge.svg)](https://github.com/justinwlin/flipper-subghz-scheduler/actions/workflows/build.yml)
 
-**One-Shot** waits for the configured interval, transmits the full list once, then exits. The shortest interval is `00:00:01`. **Immediate** starts without that initial wait and continues transmitting at the interval until you stop it. **TX Delay** is a separate millisecond delay after each signal transmission.
+Upstream has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009). Playlist scheduling (v3.2) was tested on Momentum (API 87.1).
 
-To use an existing `.txt` playlist, choose **New Schedule → Select File**. You can also select a single `.sub` file there.
+> [!NOTE]
+> Upstream reports no current Xtreme support, as development of that firmware was officially [discontinued on Nov 18, 2024](https://github.com/Flipper-XFW/Xtreme-Firmware/commit/54619d013a120897eeade491decf4d1e95217c06). Since then, breaking changes were made to the Furi API. Check upstream for any port.
 
-## Rename or delete a playlist
+## Build
 
-Open **Build Playlist → Manage playlists...**. The app lists `.txt` files in `/ext/subghz/playlist/`. Select one, then choose **Rename** or **Delete**. Rename refuses a name that already exists. Delete asks for confirmation and removes only the selected playlist file; it does not delete the `.sub` files it references.
+These apps are built using [ufbt](https://pypi.org/project/ufbt/) - a subset of the flipper build tool (fbt) targeted at building apps. Install it with:
 
-If the playlist is selected in the current schedule, renaming updates that selection and deleting clears it. Previously saved `.sch` schedule files are not rewritten, so they may need their playlist selected again after a rename or deletion.
-
-## Playlist file format
-
-Each line is one absolute `.sub` path. Lines are sent in file order:
-
-```text
-sub: /ext/subghz/Biglight.sub
-sub: /ext/subghz/Minilight.sub
-sub: /ext/subghz/Singlelight.sub
+```bash
+pip install ufbt
 ```
 
-The builder saves this same format under `/ext/subghz/playlist/`. A playlist can also be created or edited on a computer and copied to the Flipper.
+For build only, run `ufbt` from the terminal in the project directory. To upload, connect the Flipper, close qFlipper so the USB serial port is free, and run `ufbt launch`.
 
-## Build from source
+The directory contains the following batch script(s) to simplify the upload process:
+* `launch_win.bat` - Windows only. Invokes `ufbt` to deploy and launch the app on a flipper over USB, and resets terminal colors in case of error.
 
-Install [uFBT](https://github.com/flipperdevices/flipperzero-ufbt) and select the SDK channel that matches your Flipper firmware. From the repository root:
+Build outputs are found in the `dist` directory for each application.
 
-```sh
-ufbt                 # builds dist/subghz_scheduler.fap
-ufbt launch          # installs and launches it on a connected Flipper
-```
 
-Close qFlipper before `ufbt launch`, because both programs use the USB serial port. On a Mac where Homebrew Python blocks `pip install`, `uv tool install ufbt` is an alternative. This fork was built and launched with uFBT 0.2.6 against official firmware 1.5.1 / API 88.2.
-
-## Known limits
-
-- The app creates new playlists and can rename or delete existing ones, but it cannot insert, reorder, or remove individual entries in an existing saved playlist.
-- One-Shot has a minimum one-second wait before it starts. Use Immediate for an immediate start with repeated runs.
-- The published binary is verified for the firmware version stated above. Other firmware versions may require a rebuild.
+# To-Do
+- [ ] Enable running in the background.
+- [x] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2). See Step `One` with Schedule `Per Line`.
+- [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
+- [ ] Options to select notifications on transmit (vibro, backlight, etc).
 
 ## Credits and license
 
-The original Scheduler was written by [Patrick Edwards (@shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler). This fork adds the on-device playlist features. The original project's [MIT license](LICENSE) is retained. See [CHANGELOG.md](CHANGELOG.md) for changes in this fork.
+Original app by [Patrick Edwards (@shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler). On-device playlist builder and management, timed playlist syntax, and screenshots by [@justinwlin](https://github.com/justinwlin). Distributed under the [MIT license](LICENSE).

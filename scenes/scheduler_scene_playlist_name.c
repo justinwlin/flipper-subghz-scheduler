@@ -1,5 +1,6 @@
 #include "helpers/scheduler_popup.h"
 #include "src/scheduler_app_i.h"
+#include "helpers/scheduler_playlist.h"
 
 #include <gui/modules/validators.h>
 
@@ -24,7 +25,11 @@ static bool playlist_save(SchedulerApp* app, const char* path) {
 
     if(ok) {
         for(uint8_t i = 0; i < app->playlist_count; i++) {
-            furi_string_printf(line, "sub: %s\n", furi_string_get_cstr(app->playlist_items[i]));
+            const char* item = furi_string_get_cstr(app->playlist_items[i]);
+            if(!strncmp(item, "time:", 5))
+                furi_string_printf(line, "%s\n", item);
+            else
+                furi_string_printf(line, "sub: %s\n", item);
             if(storage_file_write(file, furi_string_get_cstr(line), furi_string_size(line)) !=
                furi_string_size(line)) {
                 ok = false;
@@ -79,10 +84,26 @@ bool scheduler_scene_playlist_name_on_event(void* context, SceneManagerEvent eve
             dialog_message_show_storage_error(app->dialogs, "Failed to save playlist");
         } else {
             furi_string_set(app->tx_file_path, path);
-            scheduler_set_file(app->scheduler, furi_string_get_cstr(path), app->playlist_count);
+            Storage* storage = furi_record_open(RECORD_STORAGE);
+            SchedulerPlaylistTiming timing;
+            bool valid =
+                scheduler_playlist_read_timing(storage, furi_string_get_cstr(path), &timing);
+            furi_record_close(RECORD_STORAGE);
+            if(!valid) {
+                dialog_message_show_storage_error(app->dialogs, "Invalid playlist");
+                furi_string_free(path);
+                return true;
+            }
+            scheduler_set_file(app->scheduler, furi_string_get_cstr(path), timing.count);
+            scheduler_set_embedded_timing(app->scheduler, timing.has_timing);
+            if(timing.has_timing) {
+                scheduler_set_step_mode(app->scheduler, SchedulerStepModeOne);
+                scheduler_set_schedule_type(app->scheduler, SchedulerSchedulePerLine);
+                for(uint8_t i = 0; i < timing.count; ++i)
+                    scheduler_set_line_interval(app->scheduler, i, timing.wait_seconds[i]);
+            }
             app->should_reset = false;
-            snprintf(
-                app->popup_msg, sizeof(app->popup_msg), "Saved %u signals", app->playlist_count);
+            snprintf(app->popup_msg, sizeof(app->popup_msg), "Saved %u signals", timing.count);
             scheduler_popup_success_show(app, app->popup_msg);
         }
         furi_string_free(path);

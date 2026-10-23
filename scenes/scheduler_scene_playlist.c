@@ -5,6 +5,7 @@
 
 typedef enum {
     PlaylistActionAdd = 100,
+    PlaylistActionWait,
     PlaylistActionRemoveLast,
     PlaylistActionClear,
     PlaylistActionSave,
@@ -23,12 +24,17 @@ static void playlist_rebuild(SchedulerApp* app) {
     char label[80];
     for(uint8_t i = 0; i < app->playlist_count; i++) {
         const char* path = furi_string_get_cstr(app->playlist_items[i]);
-        const char* name = strrchr(path, '/');
-        snprintf(label, sizeof(label), "%u. %s", (unsigned)(i + 1), name ? name + 1 : path);
+        if(!strncmp(path, "time:", 5)) {
+            snprintf(label, sizeof(label), "%u. Wait %ss", (unsigned)(i + 1), path + 6);
+        } else {
+            const char* name = strrchr(path, '/');
+            snprintf(label, sizeof(label), "%u. %s", (unsigned)(i + 1), name ? name + 1 : path);
+        }
         submenu_add_item(app->menu, label, i, playlist_menu_callback, app);
     }
 
     submenu_add_item(app->menu, "Add signal...", PlaylistActionAdd, playlist_menu_callback, app);
+    submenu_add_item(app->menu, "Add wait...", PlaylistActionWait, playlist_menu_callback, app);
     if(app->playlist_count) {
         submenu_add_item(
             app->menu, "Remove last", PlaylistActionRemoveLast, playlist_menu_callback, app);
@@ -81,6 +87,13 @@ bool scheduler_scene_playlist_on_event(void* context, SceneManagerEvent event) {
         }
         playlist_rebuild(app);
         return true;
+    case PlaylistActionWait:
+        if(app->playlist_count == SCHEDULER_PLAYLIST_MAX_ITEMS) {
+            dialog_message_show_storage_error(app->dialogs, "Playlist is full");
+        } else {
+            scene_manager_next_scene(app->scene_manager, SchedulerScenePlaylistWait);
+        }
+        return true;
     case PlaylistActionClear:
         while(app->playlist_count) {
             furi_string_free(app->playlist_items[--app->playlist_count]);
@@ -90,6 +103,19 @@ bool scheduler_scene_playlist_on_event(void* context, SceneManagerEvent event) {
         return true;
     case PlaylistActionSave:
         if(app->playlist_count) {
+            const char* last = furi_string_get_cstr(app->playlist_items[app->playlist_count - 1]);
+            if(!strncmp(last, "time:", 5)) {
+                dialog_message_show_storage_error(app->dialogs, "Add a signal after wait");
+                return true;
+            }
+            bool has_signal = false;
+            for(uint8_t i = 0; i < app->playlist_count; i++)
+                has_signal |= strncmp(furi_string_get_cstr(app->playlist_items[i]), "time:", 5) !=
+                              0;
+            if(!has_signal) {
+                dialog_message_show_storage_error(app->dialogs, "Add a signal first");
+                return true;
+            }
             scene_manager_next_scene(app->scene_manager, SchedulerScenePlaylistName);
         }
         return true;

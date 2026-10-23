@@ -7,10 +7,10 @@ App(
     entry_point="scheduler_app",
     stack_size=3 * 1024,
     fap_category="Sub-GHz",
-    fap_version="3.1.0",
+    fap_version="3.4.1",
     fap_icon="icons/icon.png",
     fap_icon_assets="icons",
     fap_author="Patrick Edwards, @justinwlin",
     fap_weburl="https://github.com/justinwlin/flipper-subghz-scheduler",
-    fap_description="Schedule Sub-GHz signals and build playlists on the Flipper.",
+    fap_description="Schedule Sub-GHz signals and build timed playlists on the Flipper.",
 )
