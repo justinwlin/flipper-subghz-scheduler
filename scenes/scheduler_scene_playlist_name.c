@@ -24,8 +24,7 @@ static bool playlist_save(SchedulerApp* app, const char* path) {
 
     if(ok) {
         for(uint8_t i = 0; i < app->playlist_count; i++) {
-            furi_string_printf(
-                line, "sub: %s\n", furi_string_get_cstr(app->playlist_items[i]));
+            furi_string_printf(line, "sub: %s\n", furi_string_get_cstr(app->playlist_items[i]));
             if(storage_file_write(file, furi_string_get_cstr(line), furi_string_size(line)) !=
                furi_string_size(line)) {
                 ok = false;
@@ -80,10 +79,10 @@ bool scheduler_scene_playlist_name_on_event(void* context, SceneManagerEvent eve
             dialog_message_show_storage_error(app->dialogs, "Failed to save playlist");
         } else {
             furi_string_set(app->tx_file_path, path);
-            scheduler_set_file(
-                app->scheduler, furi_string_get_cstr(path), app->playlist_count);
+            scheduler_set_file(app->scheduler, furi_string_get_cstr(path), app->playlist_count);
             app->should_reset = false;
-            snprintf(app->popup_msg, sizeof(app->popup_msg), "Saved %u signals", app->playlist_count);
+            snprintf(
+                app->popup_msg, sizeof(app->popup_msg), "Saved %u signals", app->playlist_count);
             scheduler_popup_success_show(app, app->popup_msg);
         }
         furi_string_free(path);

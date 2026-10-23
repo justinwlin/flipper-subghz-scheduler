@@ -86,10 +86,8 @@ void scheduler_scene_playlist_manage_on_enter(void* context) {
     SchedulerApp* app = context;
     submenu_reset(app->menu);
     submenu_set_header(app->menu, path_basename(furi_string_get_cstr(app->managed_playlist_path)));
-    submenu_add_item(
-        app->menu, "Rename", PlaylistManageRename, playlist_manage_callback, app);
-    submenu_add_item(
-        app->menu, "Delete", PlaylistManageDelete, playlist_manage_callback, app);
+    submenu_add_item(app->menu, "Rename", PlaylistManageRename, playlist_manage_callback, app);
+    submenu_add_item(app->menu, "Delete", PlaylistManageDelete, playlist_manage_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerAppViewMenu);
 }
 
@@ -164,26 +162,28 @@ void scheduler_scene_playlist_rename_on_enter(void* context) {
         sizeof(app->managed_name_tmp),
         false);
 
-    ValidatorIsFile* validator = validator_is_file_alloc_init(
-        SCHEDULER_PLAYLIST_FOLDER, ".txt", app->managed_name_tmp);
+    ValidatorIsFile* validator =
+        validator_is_file_alloc_init(SCHEDULER_PLAYLIST_FOLDER, ".txt", app->managed_name_tmp);
     text_input_set_validator(app->text_input, validator_is_file_callback, validator);
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerAppViewTextInput);
 }
 
 bool scheduler_scene_playlist_rename_on_event(void* context, SceneManagerEvent event) {
     SchedulerApp* app = context;
-    if(event.type != SceneManagerEventTypeCustom || event.event != PlaylistRenameDone) return false;
+    if(event.type != SceneManagerEventTypeCustom || event.event != PlaylistRenameDone)
+        return false;
     if(!app->managed_name_tmp[0] || strchr(app->managed_name_tmp, '/')) return true;
 
-    FuriString* new_path = furi_string_alloc_printf(
-        "%s/%s.txt", SCHEDULER_PLAYLIST_FOLDER, app->managed_name_tmp);
+    FuriString* new_path =
+        furi_string_alloc_printf("%s/%s.txt", SCHEDULER_PLAYLIST_FOLDER, app->managed_name_tmp);
     const char* old_path = furi_string_get_cstr(app->managed_playlist_path);
     const char* destination = furi_string_get_cstr(new_path);
 
     if(strcmp(old_path, destination) != 0) {
         Storage* storage = furi_record_open(RECORD_STORAGE);
         bool exists = storage_common_stat(storage, destination, NULL) == FSE_OK;
-        FS_Error result = exists ? FSE_EXIST : storage_common_rename(storage, old_path, destination);
+        FS_Error result = exists ? FSE_EXIST :
+                                   storage_common_rename(storage, old_path, destination);
         furi_record_close(RECORD_STORAGE);
 
         if(result != FSE_OK) {

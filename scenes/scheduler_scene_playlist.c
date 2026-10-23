@@ -32,7 +32,8 @@ static void playlist_rebuild(SchedulerApp* app) {
     if(app->playlist_count) {
         submenu_add_item(
             app->menu, "Remove last", PlaylistActionRemoveLast, playlist_menu_callback, app);
-        submenu_add_item(app->menu, "Clear list", PlaylistActionClear, playlist_menu_callback, app);
+        submenu_add_item(
+            app->menu, "Clear list", PlaylistActionClear, playlist_menu_callback, app);
         submenu_add_item(
             app->menu, "Save playlist...", PlaylistActionSave, playlist_menu_callback, app);
     }

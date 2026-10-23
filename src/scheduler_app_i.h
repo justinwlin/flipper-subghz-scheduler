@@ -22,13 +22,13 @@
 #include <notification/notification_messages.h>
 #include <subghz_scheduler_icons.h>
 
-#define SCHEDULER_APP_NAME    "Sub-GHz Scheduler"
-#define SCHEDULER_APP_VERSION "3.1.0"
-#define SCHEDULER_APP_AUTHOR  "Patrick Edwards"
-#define SCHEDULER_APP_HANDLE  "@shalebridge"
-#define SCHEDULER_PLAYLIST_MAX_ITEMS 32
+#define SCHEDULER_APP_NAME                   "Sub-GHz Scheduler"
+#define SCHEDULER_APP_VERSION                "3.1.0"
+#define SCHEDULER_APP_AUTHOR                 "Patrick Edwards"
+#define SCHEDULER_APP_HANDLE                 "@shalebridge"
+#define SCHEDULER_PLAYLIST_MAX_ITEMS         32
 #define SCHEDULER_MANAGED_PLAYLIST_MAX_ITEMS 64
-#define SCHEDULER_PLAYLIST_FOLDER EXT_PATH("subghz/playlist")
+#define SCHEDULER_PLAYLIST_FOLDER            EXT_PATH("subghz/playlist")
 
 #define GUI_DISPLAY_HEIGHT 64
 #define GUI_DISPLAY_WIDTH  128
