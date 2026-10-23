@@ -23,9 +23,12 @@
 #include <subghz_scheduler_icons.h>
 
 #define SCHEDULER_APP_NAME    "Sub-GHz Scheduler"
-#define SCHEDULER_APP_VERSION "3.0"
+#define SCHEDULER_APP_VERSION "3.1.0"
 #define SCHEDULER_APP_AUTHOR  "Patrick Edwards"
 #define SCHEDULER_APP_HANDLE  "@shalebridge"
+#define SCHEDULER_PLAYLIST_MAX_ITEMS 32
+#define SCHEDULER_MANAGED_PLAYLIST_MAX_ITEMS 64
+#define SCHEDULER_PLAYLIST_FOLDER EXT_PATH("subghz/playlist")
 
 #define GUI_DISPLAY_HEIGHT 64
 #define GUI_DISPLAY_WIDTH  128
@@ -50,6 +53,11 @@ struct SchedulerApp {
     Scheduler* scheduler;
     FuriString* tx_file_path;
     FuriString* save_dir;
+    FuriString* managed_playlist_path;
+    FuriString* managed_playlist_choices[SCHEDULER_MANAGED_PLAYLIST_MAX_ITEMS];
+    uint8_t managed_playlist_choice_count;
+    FuriString* playlist_items[SCHEDULER_PLAYLIST_MAX_ITEMS];
+    uint8_t playlist_count;
     Popup* popup;
     TextInput* text_input;
     SchedulerRunView* run_view;
@@ -57,6 +65,8 @@ struct SchedulerApp {
 
     char popup_msg[80];
     char save_name_tmp[SCHEDULER_MAX_LEN_NAME];
+    char playlist_name_tmp[SCHEDULER_MAX_LEN_NAME];
+    char managed_name_tmp[SCHEDULER_MAX_LEN_NAME];
     volatile bool is_transmitting;
     bool should_reset;
     bool ext_radio_present;

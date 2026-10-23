@@ -1,120 +1,69 @@
-# SubGHz Scheduler
+# Sub-GHz Scheduler with on-device playlists
 
-A Flipper Zero app to send SubGHz signals at a given interval. Individual `*.sub` or playlist `*.txt` files can be used for transmission, and schedule settings can be saved in a `*.sch` file.
+A Flipper Zero app for transmitting saved Sub-GHz signals on a schedule. This derivative of [Sub-GHz Scheduler by Patrick Edwards](https://github.com/shalebridge/flipper-subghz-scheduler), based on [upstream commit `62a526f` (v3.0)](https://github.com/shalebridge/flipper-subghz-scheduler/commit/62a526f52870c9b7e6b6f1fa5878d57711523155), adds an on-device playlist builder and tools to rename or delete saved playlists. It works with the official Flipper firmware; custom firmware is not required.
 
+## What it does
 
-<table style="border:0px">
-  <tr style="border:0px">
-    <td style="border:0px" width="25%" align="left">
-    Schedule intervals in H:M:S format <br>
-    from 00:00:01 to 99:59:59.
-    </td>
-    <td style="border:0px" width="20%"><img src="./screenshots/v3/intervals.png" width="100%"></td>
-  </tr>
-  <tr style="border:0px">
-    <td style="border:0px" width="25%" align="left">
-    Interval timing modes: <br>
-     <ul>
-       <li>Relative: Interval is length of time from `END` of one transmission to `START` of next.</li>
-       <li>Precise: Interval is length of time from `START` of one transmission to `START` of next.</li>
-     </ul>
-    </td>
-    <td style="border:0px" width="20%"><img src="./screenshots/v3/timing.png" width="100%"></td>
-  </tr>
- <tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-    Data Tx Count:<br>
-  <ul>
-  <li>x1, x2, x3, x4, x5, x6</li>
-  </ul>
-  </td>
-  <td style="border:0px" width="20%"><img src="./screenshots/v3/txcount.png" width="100%"></td>
-<tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-    Transmission Modes:<br>
-  <ul>
-  <li>Normal: Transmit after intervals.</li>
-  <li>Immediate: Counts start as interval.</li>
-  <li>One-Shot: Wait interval and transmits once.</li>
-  </ul>
-  </td>
-  <td style="border:0px" width="20%"><img src="./screenshots/v3/txmode.png" width="100%"></td>
- </tr>
-<tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-   Inter-transmission delay selectable<br>
-   from 0ms to 1000ms in 50ms increments.
-  </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v3/txdelay.png" width="100%"></td>
-  </tr>
-  <tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-   Radio Selection:<br>
-   <ul>
-    <li>Internal</li>
-    <li>External (When Present)</li>
-   </ul>
-  </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v3/radio.png" width="100%"></td>
-  </tr>
-    <tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-   Save settings for later use.<br>
-  </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v3/saveschedule.png" width="100%"></td>
-  </tr>
-  <tr style="border:0px">
-  <td style="border:0px" width="25%" align="left">
-   Run view displays:
-    <ul>
-      <li>TX Mode</li>
-      <li>TX Interval</li>
-      <li>TX Count</li>
-      <li>Radio</li>
-      <li>Selected File</li>
-      <li>TX Interval Countdown</li>
-    </ul>
-  </td>
-   <td style="border:0px" width="20%"><img src="./screenshots/v3/rundisplay.png" width="100%"></td>
-  </tr>
-</table>
+- Build an ordered playlist by choosing saved `.sub` files one at a time, including the same file more than once.
+- Save the playlist as a `.txt` file on the Flipper, then select it automatically for a schedule.
+- Rename or delete saved playlists from the app. Deletion asks for confirmation.
+- Use the original Scheduler features: single-file or playlist transmission, 1 to 6 transmissions per signal, internal or external CC1101 radio, interval and TX delay settings, and saved `.sch` schedules.
 
+The playlist builder holds up to 32 signals. It does not edit the contents of a previously saved playlist. To change one, build and save a new list.
 
-## Requirements
+## Install
 
-This app is tested against the current `dev` and `release` branches of the [OFW](https://github.com/flipperdevices/flipperzero-firmware):
+Download `subghz_scheduler.fap` from the [latest release](https://github.com/justinwlin/flipper-subghz-scheduler/releases/latest) and copy it to `/ext/apps/Sub-GHz/subghz_scheduler.fap` on the Flipper's SD card. You can use qFlipper's file manager or another SD card file manager. Open **Apps → Sub-GHz → Sub-GHz Scheduler**.
 
-* Current OFW Version: 1.4.3
-<br>[![Compatibility status:](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml/badge.svg)](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml)
+The downloadable build is for **official firmware 1.5.1, API 88.2, target f7**. A `.fap` must match the firmware API on the device. If yours differs, build from source using the matching uFBT SDK. Installing this fork at the path above replaces the catalog version of Scheduler on that SD card; reinstalling the catalog version replaces this fork.
 
-It has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009).
+## Build and transmit a playlist
 
-> [!NOTE]
-> Currently not supported on Xtreme, as development of that firmware was officially [discontinued on Nov 18, 2024](https://github.com/Flipper-XFW/Xtreme-Firmware/commit/54619d013a120897eeade491decf4d1e95217c06). Since then, breaking changes were made to the Furi API. For those who still use Xtreme I am working on a separate port.
+1. Save or capture the signals you want as `.sub` files under `/ext/subghz/`.
+2. Open **Sub-GHz Scheduler → Build Playlist**.
+3. Choose **Add signal...**, select a `.sub` file, and repeat in transmission order. The numbered list shows the order. Use **Remove last** or **Clear list** to correct the draft.
+4. Choose **Save playlist...** and enter a name. The app writes `/ext/subghz/playlist/<name>.txt`, selects it, and opens the schedule settings.
+5. Set **TX Mode**, **Interval**, **TX Count**, and **TX Delay**, then choose **Start**.
 
-## Build
+**One-Shot** waits for the configured interval, transmits the full list once, then exits. The shortest interval is `00:00:01`. **Immediate** starts without that initial wait and continues transmitting at the interval until you stop it. **TX Delay** is a separate millisecond delay after each signal transmission.
 
-These apps are built using [ufbt](https://pypi.org/project/ufbt/) - a subset of the flipper build tool (fbt) targeted at building apps. Install it with:
+To use an existing `.txt` playlist, choose **New Schedule → Select File**. You can also select a single `.sub` file there.
 
-```bash
-pip install ufbt
+## Rename or delete a playlist
+
+Open **Build Playlist → Manage playlists...**. The app lists `.txt` files in `/ext/subghz/playlist/`. Select one, then choose **Rename** or **Delete**. Rename refuses a name that already exists. Delete asks for confirmation and removes only the selected playlist file; it does not delete the `.sub` files it references.
+
+If the playlist is selected in the current schedule, renaming updates that selection and deleting clears it. Previously saved `.sch` schedule files are not rewritten, so they may need their playlist selected again after a rename or deletion.
+
+## Playlist file format
+
+Each line is one absolute `.sub` path. Lines are sent in file order:
+
+```text
+sub: /ext/subghz/Biglight.sub
+sub: /ext/subghz/Minilight.sub
+sub: /ext/subghz/Singlelight.sub
 ```
 
-For build only, run `ufbt` from the terminal in the project directory. To upload, make sure Flipper is connected to your computer and run `ufbt launch`.
+The builder saves this same format under `/ext/subghz/playlist/`. A playlist can also be created or edited on a computer and copied to the Flipper.
 
-The directory contains the following batch script(s) to simplify the upload process:
-* `launch_win.bat` - Windows only. Invokes `ufbt` to deploy and launch the app on a flipper over USB, and resets terminal colors in case of error.
+## Build from source
 
-Build outputs are found in the `dist` directory for each application.
+Install [uFBT](https://github.com/flipperdevices/flipperzero-ufbt) and select the SDK channel that matches your Flipper firmware. From the repository root:
 
+```sh
+ufbt                 # builds dist/subghz_scheduler.fap
+ufbt launch          # installs and launches it on a connected Flipper
+```
 
-# To-Do
-- [ ] Enable running in the background.
-- [ ] `TESTING IN PROGRESS` Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2), and run that at another arbitrary interval. This can include custom playlist keys or custom app files.
-- [ ] `TESTING IN PROGRESS` Separate into multiple modes:  
-  - `Periodic`: Current functionality.
-  - `Alarm`: To set specific time for transmission.
-  - `Custom`: Periodic with custom breaks and tx count between transmissions.
-- [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [ ] Enable quitting from transmission. Currently, if back is pressed during playlist transmission, transmission will complete before exiting to main menu.
-- [ ] Options to select notifications on transmit (vibro, backlight, etc).
+Close qFlipper before `ufbt launch`, because both programs use the USB serial port. On a Mac where Homebrew Python blocks `pip install`, `uv tool install ufbt` is an alternative. This fork was built and launched with uFBT 0.2.6 against official firmware 1.5.1 / API 88.2.
+
+## Known limits
+
+- The app creates new playlists and can rename or delete existing ones, but it cannot insert, reorder, or remove individual entries in an existing saved playlist.
+- One-Shot has a minimum one-second wait before it starts. Use Immediate for an immediate start with repeated runs.
+- The published binary is verified for the firmware version stated above. Other firmware versions may require a rebuild.
+
+## Credits and license
+
+The original Scheduler was written by [Patrick Edwards (@shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler). This fork adds the on-device playlist features. The original project's [MIT license](LICENSE) is retained. See [CHANGELOG.md](CHANGELOG.md) for changes in this fork.

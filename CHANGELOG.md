@@ -1,3 +1,10 @@
+# v3.1.0 (2026-10-22) — playlist fork
+
+- Build ordered `.sub` playlists directly on the Flipper, with up to 32 entries.
+- Save playlists under `/ext/subghz/playlist/` and select them for scheduling.
+- List, rename, and delete saved playlists on the Flipper. Deletion requires confirmation.
+- Update the documentation for installation, usage, file format, compatibility, and upstream attribution.
+
 # v3.0 (2026-02-12)
 
 ## New Features
